@@ -1,0 +1,28 @@
+version: '3.4'
+
+services:
+  db:
+    image: mongo:6.0
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password
+
+  web:
+    image: golang:1.21
+    ports:
+      - "8081:8081"
+    build:
+      context: ./webApi
+    depends_on:
+      - db
+
+  proxy:
+    image: golang:1.21
+    ports:
+      - "8080:8080"
+    build:
+      context: ./proxy
+    depends_on:
+      - db

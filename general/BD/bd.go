@@ -10,7 +10,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 
-	rrs "github.com/KolobokMysnoy/tmp/general/requestresponsestruct"
+	rrs "github.com/KolobokMysnoy/tmp/general/requestResponseStruct"
 )
 
 var (

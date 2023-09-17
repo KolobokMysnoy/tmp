@@ -10,7 +10,7 @@ import (
 	"strings"
 
 	BD "github.com/KolobokMysnoy/tmp/general/BD"
-	rrs "github.com/KolobokMysnoy/tmp/general/requestresponsestruct"
+	rrs "github.com/KolobokMysnoy/tmp/general/requestResponseStruct"
 
 	"github.com/go-chi/chi"
 )

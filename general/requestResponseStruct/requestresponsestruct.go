@@ -1,4 +1,4 @@
-package requestresponsestruct
+package requestResponseStruct
 
 import "net/http"
 

@@ -14,7 +14,7 @@ import (
 )
 
 var (
-	IpConnectMongo   = "bd"
+	IpConnectMongo   = "db"
 	PortConnectMongo = "27017"
 	Login            = "admin"
 	Password         = "password"

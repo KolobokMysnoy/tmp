@@ -14,5 +14,5 @@ func main() {
 	router.Get("/scan/{id}", scan)
 
 	http.Handle("/", router)
-	http.ListenAndServe(":8082", nil)
+	http.ListenAndServe(":8000", nil)
 }

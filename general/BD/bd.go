@@ -64,7 +64,7 @@ func createMongoDBClient() (*mongo.Client, error) {
 type BD interface {
 	SaveResponseRequest(rrs.Response, rrs.Request) error
 	GetRequestByID(string) (rrs.Request, error)
-	GetAllRequests() ([]rrs.Request, error)
+	GetAllRequests() ([]rrs.RequestWithID, error)
 }
 
 type MongoDB struct {
@@ -184,7 +184,7 @@ func (m MongoDB) GetAllRequests() ([]rrs.RequestWithID, error) {
 				Cookies:    request.Cookies,
 				PostParams: request.PostParams,
 			},
-			Id: string(request.ID),
+			Id: request.ID.Hex(),
 		}
 		requestsWithIDs = append(requestsWithIDs, tmpReq)
 	}

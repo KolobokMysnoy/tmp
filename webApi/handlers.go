@@ -154,3 +154,41 @@ func requestById(wr http.ResponseWriter, req *http.Request) {
 
 	wr.WriteHeader(http.StatusOK)
 }
+
+func scan(wr http.ResponseWriter, request *http.Request) {
+	log.Print("run operation scan")
+	id := chi.URLParam(request, "id")
+	bd := BD.MongoDB{}
+
+	log.Print("request by id =", id)
+	req, err := bd.GetRequestByID(id)
+	if err != nil {
+		errStr := "can't get request by id = " + id + ":"
+		log.Print(errStr, err)
+		http.Error(wr, errStr,
+			http.StatusInternalServerError)
+		return
+	}
+
+	log.Print("getting urls from dictionary")
+	urls, err := getAllUrls()
+	if err != nil {
+		log.Println("error at getting urls:", err)
+		return
+	}
+
+	log.Print("start scanning")
+	urlsFound, err := getErrorUrls(urls, req)
+	if err != nil {
+		log.Print(err)
+		http.Error(wr, "Error with checking urls", http.StatusInternalServerError)
+		return
+	}
+
+	log.Print("Get server reply")
+
+	responseBody := []byte(strings.Join(urlsFound, "\n"))
+
+	wr.WriteHeader(http.StatusOK)
+	io.Copy(wr, bytes.NewReader(responseBody))
+}

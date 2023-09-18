@@ -11,8 +11,8 @@ func main() {
 	router.Get("/requests", requests)
 	router.Get("/repeat/{id}", repeat)
 	router.Get("/requests/{id}", requestById)
-	router.Get("/scan/{id}", repeat)
+	router.Get("/scan/{id}", scan)
 
 	http.Handle("/", router)
-	http.ListenAndServe(":8081", nil)
+	http.ListenAndServe(":8082", nil)
 }

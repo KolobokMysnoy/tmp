@@ -3,6 +3,11 @@ module github.com/KolobokMysnoy/tmp/proxy
 go 1.21.0
 
 require (
+	github.com/KolobokMysnoy/tmp/general/BD v0.0.0-20230918170143-e8e514cdfb86
+	github.com/KolobokMysnoy/tmp/general/requestResponseStruct v0.0.0-20230918170143-e8e514cdfb86
+)
+
+require (
 	github.com/golang/snappy v0.0.1 // indirect
 	github.com/klauspost/compress v1.13.6 // indirect
 	github.com/montanaflynn/stats v0.0.0-20171201202039-1bf9dbcd8cbe // indirect

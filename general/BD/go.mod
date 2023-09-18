@@ -3,7 +3,7 @@ module github.com/KolobokMysnoy/tmp/general/BD
 go 1.21.0
 
 require (
-	github.com/KolobokMysnoy/tmp/general/requestResponseStruct v0.0.0-20230917155817-1c939440a044
+	github.com/KolobokMysnoy/tmp/general/requestResponseStruct v0.0.0-20230918182844-bed52bfafade
 	go.mongodb.org/mongo-driver v1.12.1
 )
 

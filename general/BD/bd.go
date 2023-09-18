@@ -150,7 +150,7 @@ func (m MongoDB) GetRequestByID(id string) (rrs.Request, error) {
 	}, nil
 }
 
-func (m MongoDB) GetAllRequests() ([]rrs.Request, error) {
+func (m MongoDB) GetAllRequests() ([]rrs.RequestWithID, error) {
 	client, err := createMongoDBClient()
 	if err != nil {
 		return nil, err
@@ -166,27 +166,32 @@ func (m MongoDB) GetAllRequests() ([]rrs.Request, error) {
 	}
 	defer cursor.Close(context.Background())
 
-	var requests []rrs.Request
+	var requestsWithIDs []rrs.RequestWithID
 	for cursor.Next(context.Background()) {
 		var request RequestRepository
 		if err := cursor.Decode(&request); err != nil {
 			return nil, err
 		}
-		requests = append(requests, rrs.Request{
-			Method:     request.Method,
-			Path:       request.Path,
-			Scheme:     request.Scheme,
-			Host:       request.Host,
-			GetParams:  request.GetParams,
-			Headers:    request.Headers,
-			Cookies:    request.Cookies,
-			PostParams: request.PostParams,
-		})
+
+		tmpReq := rrs.RequestWithID{
+			Req: rrs.Request{
+				Method:     request.Method,
+				Path:       request.Path,
+				Scheme:     request.Scheme,
+				Host:       request.Host,
+				GetParams:  request.GetParams,
+				Headers:    request.Headers,
+				Cookies:    request.Cookies,
+				PostParams: request.PostParams,
+			},
+			Id: string(request.ID),
+		}
+		requestsWithIDs = append(requestsWithIDs, tmpReq)
 	}
 
 	if err := cursor.Err(); err != nil {
 		return nil, err
 	}
 
-	return requests, nil
+	return requestsWithIDs, nil
 }

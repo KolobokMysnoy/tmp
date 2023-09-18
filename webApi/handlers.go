@@ -116,6 +116,7 @@ func requests(wr http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	log.Println(allReq)
 	wr.Header().Set("Content-Type", "application/json")
 	_, err = wr.Write(responseJSON)
 	if err != nil {

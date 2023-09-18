@@ -19,3 +19,8 @@ type Response struct {
 	Headers http.Header `bson:"headers"`
 	Body    string      `bson:"body"`
 }
+
+type RequestWithID struct {
+	Req Request
+	Id  string
+}

@@ -12,7 +12,7 @@ func main() {
 	// Create an HTTP server that listens on port 8080
 	bd := bd.MongoDB{}
 	p := ProxyHTTP{}
-	p.SaveReqAndResp(bd.SaveResponseRequest)
+	p.addSaveFunc(bd.SaveResponseRequest)
 	handler := p
 
 	http.Handle("/", handler)

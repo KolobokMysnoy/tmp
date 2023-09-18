@@ -6,7 +6,6 @@ import (
 	"log"
 	"net"
 	"net/http"
-	"strings"
 
 	rrs "github.com/KolobokMysnoy/tmp/general/requestResponseStruct"
 )
@@ -15,88 +14,49 @@ type SaveFunc func(rrs.Response, rrs.Request) error
 
 type Proxy interface {
 	ServeHTTP(http.ResponseWriter, *http.Request)
-	SaveReqAndResp(SaveFunc)
+	addSaveFunc(SaveFunc)
 }
 
 type ProxyHTTP struct {
 	save SaveFunc
 }
 
-func (p *ProxyHTTP) SaveReqAndResp(addFunc SaveFunc) {
+func (p *ProxyHTTP) addSaveFunc(addFunc SaveFunc) {
 	p.save = addFunc
 }
 
 func (p ProxyHTTP) ServeHTTP(wr http.ResponseWriter, req *http.Request) {
-	prepare := PreparationForHttp{}
-	prepare.Prepare(wr, req)
-	log.Print("Start serving HTTP")
+	log.Print("start serving HTTP")
+
+	PreparationForHttp{}.Prepare(wr, req)
 
 	if clientIP, _, err := net.SplitHostPort(req.RemoteAddr); err == nil {
 		appendHostToXForwardHeader(req.Header, clientIP)
 	}
 
-	postParams := make(map[string][]string)
+	log.Print("start getting data from request")
+	request, err := translateFromHTTPtoRequest(req)
+	if err != nil {
+		log.Println("Error parsing form data:", err)
+		http.Error(wr, "Internal Server Error",
+			http.StatusInternalServerError)
 
-	contentTypeValues := req.Header.Values("CONTENT-TYPE")
-	for _, typeOfHead := range contentTypeValues {
-		if typeOfHead == "application/x-www-form-urlencoded" {
-			err := req.ParseForm()
-			if err != nil {
-				log.Println("Error parsing form data:", err)
-				http.Error(wr, "Internal Server Error",
-					http.StatusInternalServerError)
-				return
-			}
-
-			for key, values := range req.Form {
-				for _, value := range values {
-					postParams[key] = append(postParams[key], value)
-				}
-			}
-		}
-	}
-	log.Print("Get post params")
-
-	getParams := make(map[string][]string)
-
-	query := req.URL.Query()
-	for key, values := range query {
-		for _, value := range values {
-			getParams[key] = append(getParams[key], value)
-		}
-	}
-	log.Print("Get get params")
-
-	var cookies []http.Cookie
-	for _, cookie := range req.Cookies() {
-		cookies = append(cookies, *cookie)
-	}
-	log.Print("Get cookies")
-
-	requestToWork := rrs.Request{
-		Scheme:     req.URL.Scheme,
-		Method:     req.Method,
-		Path:       req.URL.Path,
-		Host:       req.Host,
-		GetParams:  getParams,
-		Headers:    req.Header,
-		Cookies:    cookies,
-		PostParams: postParams,
+		return
 	}
 
+	log.Print("start request to server")
 	resp, err := p.getClientReply(req, wr)
 	if err != nil {
 		return
 	}
 	defer resp.Body.Close()
 
+	log.Print("start reading from response")
 	htmlBytes, err := io.ReadAll(resp.Body)
 	if err != nil {
 		log.Println("Error:", err)
 		return
 	}
-
-	log.Print("Get server reply")
 
 	response := rrs.Response{
 		Code:    resp.StatusCode,
@@ -105,33 +65,16 @@ func (p ProxyHTTP) ServeHTTP(wr http.ResponseWriter, req *http.Request) {
 		Body:    string(htmlBytes),
 	}
 
-	err = p.save(response, requestToWork)
+	log.Print("start saving data to bd")
+	err = p.save(response, request)
 	if err != nil {
 		log.Print(err)
 		return
 	}
-	log.Print("Save data to bd")
-
-	log.Println(req.RemoteAddr, " ", resp.Status)
 
 	copyHeader(wr.Header(), resp.Header)
 	wr.WriteHeader(resp.StatusCode)
 	io.Copy(wr, bytes.NewReader(htmlBytes))
-}
-
-func appendHostToXForwardHeader(header http.Header, host string) {
-	if prior, ok := header["X-Forwarded-For"]; ok {
-		host = strings.Join(prior, ", ") + ", " + host
-	}
-	header.Set("X-Forwarded-For", host)
-}
-
-func copyHeader(dest, src http.Header) {
-	for k, vv := range src {
-		for _, v := range vv {
-			dest.Add(k, v)
-		}
-	}
 }
 
 func (p *ProxyHTTP) getClientReply(req *http.Request, wr http.ResponseWriter) (*http.Response, error) {

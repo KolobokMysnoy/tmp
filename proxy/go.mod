@@ -8,6 +8,11 @@ go 1.21.0
 // )
 
 require (
+	github.com/KolobokMysnoy/tmp/general/BD v0.0.0-20230918115209-ae363f95f648
+	github.com/KolobokMysnoy/tmp/general/requestResponseStruct v0.0.0-20230918115209-ae363f95f648
+)
+
+require (
 	github.com/golang/snappy v0.0.1 // indirect
 	github.com/klauspost/compress v1.13.6 // indirect
 	github.com/montanaflynn/stats v0.0.0-20171201202039-1bf9dbcd8cbe // indirect

@@ -2,15 +2,7 @@ module github.com/KolobokMysnoy/tmp/webApi
 
 go 1.21.0
 
-// require (
-// 	github.com/KolobokMysnoy/tmp/general/BD v0.0.0-20230917225442-bdc6c74fb75f
-// 	github.com/KolobokMysnoy/tmp/general/requestResponseStruct v0.0.0-20230917225442-bdc6c74fb75f
-// 	github.com/go-chi/chi v1.5.5
-// )
-
 require (
-	github.com/KolobokMysnoy/tmp/general/BD v0.0.0-20230918081935-52cd98571ca8
-	github.com/KolobokMysnoy/tmp/general/requestResponseStruct v0.0.0-20230918081935-52cd98571ca8
 	github.com/go-chi/chi v1.5.5
 )
 

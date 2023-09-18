@@ -61,7 +61,6 @@ func repeat(writer http.ResponseWriter, request *http.Request) {
 	copyHeader(writer.Header(), resp.Header)
 	writer.WriteHeader(resp.StatusCode)
 	io.Copy(writer, bytes.NewReader(htmlBytes))
-	log.Print("Send data to user")
 }
 
 func getServerReply(req rrs.Request) (*http.Response, error) {

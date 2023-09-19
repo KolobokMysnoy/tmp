@@ -1,10 +1,10 @@
-module github.com/KolobokMysnoy/tmp/proxy
+module github.com/KolobokMysnoy/proxy
 
 go 1.21.0
 
 require (
-	github.com/KolobokMysnoy/tmp/general/BD v0.0.0-20230918192308-1b9da6caecac
-	github.com/KolobokMysnoy/tmp/general/requestResponseStruct v0.0.0-20230918192308-1b9da6caecac
+	github.com/KolobokMysnoy/tmp/general/BD v0.0.0-20230918195629-2be92dacc4dc
+	github.com/KolobokMysnoy/tmp/general/requestResponseStruct v0.0.0-20230918195629-2be92dacc4dc
 )
 
 require (

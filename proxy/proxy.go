@@ -6,16 +6,12 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"strings"
 
 	rrs "github.com/KolobokMysnoy/tmp/general/requestResponseStruct"
 )
 
 type SaveFunc func(rrs.Response, rrs.Request) error
-
-type Proxy interface {
-	ServeHTTP(http.ResponseWriter, *http.Request)
-	addSaveFunc(SaveFunc)
-}
 
 type ProxyHTTP struct {
 	save SaveFunc
@@ -25,29 +21,109 @@ func (p *ProxyHTTP) addSaveFunc(addFunc SaveFunc) {
 	p.save = addFunc
 }
 
-func (p ProxyHTTP) ServeHTTP(wr http.ResponseWriter, req *http.Request) {
-	log.Print("start serving HTTP")
+func (p *ProxyHTTP) ServeH(upstream http.Handler, isSecureCon bool) http.Handler {
+	return http.HandlerFunc(func(wr http.ResponseWriter, req *http.Request) {
+		log.Print("start serving HTTP")
 
-	PreparationForHttp{}.Prepare(wr, req)
+		PreparationForHttp{}.Prepare(wr, req)
 
-	if clientIP, _, err := net.SplitHostPort(req.RemoteAddr); err == nil {
-		appendHostToXForwardHeader(req.Header, clientIP)
+		if clientIP, _, err := net.SplitHostPort(req.RemoteAddr); err == nil {
+			appendHostToXForwardHeader(req.Header, clientIP)
+		}
+
+		recorder := &customRecorder{ResponseWriter: wr}
+		recorder.Header().Set("Content-Encoding", "identity")
+
+		log.Print("start getting data from request")
+		request, err := translateFromHTTPtoRequest(req)
+
+		var protocol string
+		if isSecureCon {
+			protocol = "https"
+		} else {
+			protocol = "http"
+		}
+
+		request.Scheme = protocol
+
+		if err != nil {
+			log.Println("Error parsing form data:", err)
+			http.Error(wr, "Internal Server Error",
+				http.StatusInternalServerError)
+
+			return
+		}
+
+		var resp rrs.Response
+		if isSecureCon {
+			upstream.ServeHTTP(recorder, req)
+
+			reqHeaders := parseReqHeaders(req)
+			var resTextBody string
+			// TODO:
+			if strings.Contains(reqHeaders["Content-Type"], "text") ||
+				(strings.Contains(reqHeaders["Content-Type"], "application") && !strings.Contains(reqHeaders["Content-Type"], "application/octet-stream")) {
+				resTextBody = string(recorder.response)
+			}
+
+			resp = rrs.Response{
+				Code:    recorder.code,
+				Message: string(recorder.response),
+				Headers: recorder.Header(),
+				Body:    resTextBody,
+			}
+		} else {
+			resp, err = getHttpResponse(req, recorder)
+			if err != nil {
+				log.Println("Error getting  data:", err)
+				http.Error(wr, "Internal Server Error",
+					http.StatusInternalServerError)
+			}
+		}
+		log.Print("Req", req)
+
+		log.Print("start saving data to bd")
+		err = p.save(resp, request)
+		if err != nil {
+			log.Print(err)
+			return
+		}
+	})
+}
+
+func parseReqHeaders(r *http.Request) map[string]string {
+	data := make(map[string]string)
+	for name, values := range r.Header {
+		if name != "Cookie" {
+			data[name] = values[0]
+		}
 	}
+	return data
+}
 
-	log.Print("start getting data from request")
-	request, err := translateFromHTTPtoRequest(req)
+// codeRecorder - не реализация интерфейса http.Hijacker
+// даже если http.ResponseWriter внутри него является.
+type customRecorder struct {
+	http.ResponseWriter
+
+	response []byte
+	code     int
+}
+
+func (w *customRecorder) WriteHeader(code int) {
+	w.code = code
+	w.ResponseWriter.WriteHeader(code)
+}
+
+func (w *customRecorder) Write(b []byte) (int, error) {
+	w.response = append(w.response, b...)
+	return w.ResponseWriter.Write(b)
+}
+
+func getHttpResponse(req *http.Request, wr http.ResponseWriter) (rrs.Response, error) {
+	resp, err := getClientReply(req, wr)
 	if err != nil {
-		log.Println("Error parsing form data:", err)
-		http.Error(wr, "Internal Server Error",
-			http.StatusInternalServerError)
-
-		return
-	}
-
-	log.Print("start request to server")
-	resp, err := p.getClientReply(req, wr)
-	if err != nil {
-		return
+		return rrs.Response{}, nil
 	}
 	defer resp.Body.Close()
 
@@ -55,7 +131,7 @@ func (p ProxyHTTP) ServeHTTP(wr http.ResponseWriter, req *http.Request) {
 	htmlBytes, err := io.ReadAll(resp.Body)
 	if err != nil {
 		log.Println("Error:", err)
-		return
+		return rrs.Response{}, nil
 	}
 
 	response := rrs.Response{
@@ -65,19 +141,14 @@ func (p ProxyHTTP) ServeHTTP(wr http.ResponseWriter, req *http.Request) {
 		Body:    string(htmlBytes),
 	}
 
-	log.Print("start saving data to bd")
-	err = p.save(response, request)
-	if err != nil {
-		log.Print(err)
-		return
-	}
-
 	copyHeader(wr.Header(), resp.Header)
 	wr.WriteHeader(resp.StatusCode)
 	io.Copy(wr, bytes.NewReader(htmlBytes))
+
+	return response, nil
 }
 
-func (p *ProxyHTTP) getClientReply(req *http.Request, wr http.ResponseWriter) (*http.Response, error) {
+func getClientReply(req *http.Request, wr http.ResponseWriter) (*http.Response, error) {
 	client := &http.Client{}
 
 	// Read the request body

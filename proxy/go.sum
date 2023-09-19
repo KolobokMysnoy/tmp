@@ -1,7 +1,7 @@
-github.com/KolobokMysnoy/tmp/general/BD v0.0.0-20230918192308-1b9da6caecac h1:K1RudQzE2Z99FV/CqoK8u5OvBW8A03nl4KcGBGFacOI=
-github.com/KolobokMysnoy/tmp/general/BD v0.0.0-20230918192308-1b9da6caecac/go.mod h1:oGzoYLsVEiGzReaQlIHBmOKlXZZKGcLF920LPil/0y0=
-github.com/KolobokMysnoy/tmp/general/requestResponseStruct v0.0.0-20230918192308-1b9da6caecac h1:wmL+afciKHTtYkP3Uzc2Onu1QgqcCkgoeKQryA0EZi4=
-github.com/KolobokMysnoy/tmp/general/requestResponseStruct v0.0.0-20230918192308-1b9da6caecac/go.mod h1:7ylW+WKZdSURvTcIl5XYHIF6xTGJahnfTeZaTqB3MMI=
+github.com/KolobokMysnoy/tmp/general/BD v0.0.0-20230918195629-2be92dacc4dc h1:gWGuPPahf1vlHWwTOx3f8xXJI6PzS9ODS34maNOhaJQ=
+github.com/KolobokMysnoy/tmp/general/BD v0.0.0-20230918195629-2be92dacc4dc/go.mod h1:oGzoYLsVEiGzReaQlIHBmOKlXZZKGcLF920LPil/0y0=
+github.com/KolobokMysnoy/tmp/general/requestResponseStruct v0.0.0-20230918195629-2be92dacc4dc h1:i2YH4JEFcPqwLDz6D0qNqSAPw1+y5HKs71Hj8daSea0=
+github.com/KolobokMysnoy/tmp/general/requestResponseStruct v0.0.0-20230918195629-2be92dacc4dc/go.mod h1:7ylW+WKZdSURvTcIl5XYHIF6xTGJahnfTeZaTqB3MMI=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/golang/snappy v0.0.1 h1:Qgr9rKW7uDUkrbSmQeiDsGa8SjGyCOGtuasMWwvp2P4=

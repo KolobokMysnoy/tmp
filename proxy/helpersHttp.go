@@ -1,6 +1,7 @@
 package main
 
 import (
+	"log"
 	"net/http"
 	"strings"
 
@@ -105,16 +106,17 @@ func translateFromHTTPtoRequest(src *http.Request) (rrs.Request, error) {
 	}
 
 	getParams := make(map[string][]string)
-
+	log.Print("get post params")
 	query := src.URL.Query()
 	for key, values := range query {
 		for _, value := range values {
 			getParams[key] = append(getParams[key], value)
 		}
 	}
+	log.Print("get get params")
 
 	cookies := getCookies(src)
-
+	log.Print("get cookie")
 	return rrs.Request{
 		Scheme:     src.URL.Scheme,
 		Method:     src.Method,

@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"io"
+	"io/ioutil"
 	"log"
 	"net"
 	"net/http"
@@ -23,7 +24,11 @@ func (p *ProxyHTTP) addSaveFunc(addFunc SaveFunc) {
 
 func (p *ProxyHTTP) ServeH(upstream http.Handler, isSecureCon bool) http.Handler {
 	return http.HandlerFunc(func(wr http.ResponseWriter, req *http.Request) {
-		log.Print("start serving HTTP")
+		body, err := io.ReadAll(req.Body)
+		if err != nil {
+			log.Print("err read body: ", err)
+			return
+		}
 
 		PreparationForHttp{}.Prepare(wr, req)
 
@@ -34,8 +39,17 @@ func (p *ProxyHTTP) ServeH(upstream http.Handler, isSecureCon bool) http.Handler
 		recorder := &customRecorder{ResponseWriter: wr}
 		recorder.Header().Set("Content-Encoding", "identity")
 
+		req.Body = ioutil.NopCloser(bytes.NewBuffer(body))
+
 		log.Print("start getting data from request")
 		request, err := translateFromHTTPtoRequest(req)
+		if err != nil {
+			log.Println("Error parsing form data:", err)
+			http.Error(wr, "Internal Server Error",
+				http.StatusInternalServerError)
+
+			return
+		}
 
 		var protocol string
 		if isSecureCon {
@@ -46,16 +60,10 @@ func (p *ProxyHTTP) ServeH(upstream http.Handler, isSecureCon bool) http.Handler
 
 		request.Scheme = protocol
 
-		if err != nil {
-			log.Println("Error parsing form data:", err)
-			http.Error(wr, "Internal Server Error",
-				http.StatusInternalServerError)
-
-			return
-		}
-
+		req.Body = ioutil.NopCloser(bytes.NewBuffer(body))
 		var resp rrs.Response
 		if isSecureCon {
+			log.Print("serve https")
 			upstream.ServeHTTP(recorder, req)
 
 			reqHeaders := parseReqHeaders(req)
@@ -73,6 +81,8 @@ func (p *ProxyHTTP) ServeH(upstream http.Handler, isSecureCon bool) http.Handler
 				Body:    resTextBody,
 			}
 		} else {
+			log.Print("serve http")
+
 			resp, err = getHttpResponse(req, recorder)
 			if err != nil {
 				log.Println("Error getting  data:", err)
@@ -83,11 +93,13 @@ func (p *ProxyHTTP) ServeH(upstream http.Handler, isSecureCon bool) http.Handler
 		log.Print("Req", req)
 
 		log.Print("start saving data to bd")
-		err = p.save(resp, request)
-		if err != nil {
-			log.Print(err)
-			return
-		}
+		go func() {
+			if err := p.save(resp, request); err != nil {
+				log.Print(err)
+				return
+			}
+		}()
+
 	})
 }
 
